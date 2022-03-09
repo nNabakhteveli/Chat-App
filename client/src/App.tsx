@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { nanoid } from 'nanoid';
 import './App.css';
 
+const LoginContext = React.createContext<boolean | null>(null);
 
 const client = new W3CWebSocket('ws://127.0.0.1:8000')
 
@@ -12,7 +14,23 @@ interface MessageInterface {
   msg: string
 }
 
-const ChatContainer = (props: { messagesData: MessageInterface[] }) => {
+
+const LoginPage = (props: { isUserLoggedIn: boolean }) => {
+
+  if (props.isUserLoggedIn) {
+    return null;
+  } else {
+    return(
+      <div className='continueWithoutLoginContainer'>
+        <h3>Continue without login</h3>
+        <input type='text' placeholder='Enter username' />
+        <h3>or</h3>
+      </div>
+    );
+  }
+}
+
+const DisplayMessages = (props: { messagesData: MessageInterface[] }) => {
   return(
     <div className='chatContainer'>
         {
@@ -22,7 +40,7 @@ const ChatContainer = (props: { messagesData: MessageInterface[] }) => {
   );
 }
 
-function App() {
+function ChatContainer() {
   const [messages, setMessages] = useState<MessageInterface[]>([]);
   const [username, setUsername] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -35,7 +53,6 @@ function App() {
 
     client.onmessage = (msg: any) => {
       const dataFromServer = JSON.parse(msg.data);
-      console.log(2, dataFromServer);
 
       const obj: MessageInterface = {
         type: dataFromServer.type,
@@ -58,6 +75,10 @@ function App() {
   }, []);
   
   const sendMessage = (value: string): void => {
+    if (value.length === 0) {
+      return;
+    }
+
     client.send(JSON.stringify({
       recentMessages: messages,
       type: "message",
@@ -72,12 +93,18 @@ function App() {
   
   return (
     <div className="App">
-      <ChatContainer messagesData={messages} />
+      <DisplayMessages messagesData={messages} />
       <input type='text' className="messageInput" onChange={(event) => getValueFromInputField(event)} />
       <br />
       <button onClick={() => sendMessage(inputValue)}>Send message</button>
     </div>
   );
+}
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  return <LoginPage isUserLoggedIn={isLoggedIn} />
 }
 
 export default App;
