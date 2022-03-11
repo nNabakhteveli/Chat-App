@@ -1,12 +1,41 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { nanoid } from 'nanoid';
+import { GoogleLogin } from 'react-google-login';
 import './App.css';
 
-const LoginContext = React.createContext<boolean | null>(null);
 
 const client = new W3CWebSocket('ws://127.0.0.1:8000')
+
+const responseGoogle = (response: any) => {
+  if (response.hasOwnProperty('error')) {
+    console.log(response);
+    throw new Error("Something went wrong during Google authentication");
+  }
+  console.log(response);
+
+  const firstName = response.Du.VX;
+  const lastName = response.Du.iW;
+  const tokenId = response.tokenId;
+  const profilePicURL = response.profileObj.imageUrl;
+  const email = response.profileObj.email;
+
+  fetch('http://localhost:3001/api/google-login', {
+    method: 'POST',
+    
+    body: JSON.stringify({
+      "firstName": firstName,
+      "lastName": lastName,
+      "tokenID": tokenId,
+      "profilePicUrl": profilePicURL,
+      "email": email
+    }),
+
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
 
 interface MessageInterface {
   type?: string,
@@ -14,20 +43,32 @@ interface MessageInterface {
   msg: string
 }
 
+const RegisterOrLogin = (props: { action: string }) => {
+  if (props.action === 'register') {
 
-const LoginPage = (props: { isUserLoggedIn: boolean }) => {
+  }
+}
+
+const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) => {
 
   if (props.isUserLoggedIn) {
     return null;
-  } else {
-    return(
-      <div className='continueWithoutLoginContainer'>
-        <h3>Continue without login</h3>
-        <input type='text' placeholder='Enter username' />
-        <h3>or</h3>
-      </div>
-    );
   }
+
+  return(
+    <div className='register'>
+      <h3>Register / Login</h3>
+      <input type='text' placeholder='Enter username' />
+      <h3>or</h3>
+      <GoogleLogin
+        clientId={props.googleClientId}
+        buttonText="Log in with Google"
+        onSuccess={responseGoogle}
+        onFailure={responseGoogle}
+        cookiePolicy={'single_host_origin'}
+      />
+    </div>
+  );
 }
 
 const DisplayMessages = (props: { messagesData: MessageInterface[] }) => {
@@ -103,8 +144,15 @@ function ChatContainer() {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [googleClientID, setGoogleClientID] = useState('');
 
-  return <LoginPage isUserLoggedIn={isLoggedIn} />
+  useEffect(() => {
+    fetch('http://localhost:3001/api/app-params')
+    .then(response => response.json())
+    .then(result => setGoogleClientID(result.GoogleClientID));
+  }, []);
+
+  return googleClientID !== '' ? <LoginPage isUserLoggedIn={isLoggedIn} googleClientId={googleClientID} /> : null;
 }
 
 export default App;

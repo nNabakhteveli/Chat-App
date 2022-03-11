@@ -6,11 +6,11 @@ const userSchema = new Schema({
       required: true
    },
 
-   password: { 
+   password: {
       type: String,
       required: true
-   }
+   },
 
 }, { timestamps: true });
 
-export const User = mongoose.model('user_info', userSchema)
+export const NormalUser = mongoose.model('user_info', userSchema)
