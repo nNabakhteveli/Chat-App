@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { w3cwebsocket as W3CWebSocket } from 'websocket';
-import { nanoid } from 'nanoid';
+import { useState, useEffect } from 'react';
 import { GoogleLogin } from 'react-google-login';
+import ChatWrapper from './components/chat/ChatWrapper';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 
-const client = new W3CWebSocket('ws://127.0.0.1:8000')
-
-const responseGoogle = (response: any) => {
+const responseGoogle = async (response: any) => {
   if (response.hasOwnProperty('error')) {
     console.log(response);
     throw new Error("Something went wrong during Google authentication");
@@ -20,42 +18,42 @@ const responseGoogle = (response: any) => {
   const profilePicURL = response.profileObj.imageUrl;
   const email = response.profileObj.email;
 
-  fetch('http://localhost:3001/api/google-login', {
-    method: 'POST',
-    
-    body: JSON.stringify({
-      "firstName": firstName,
-      "lastName": lastName,
-      "tokenID": tokenId,
-      "profilePicUrl": profilePicURL,
-      "email": email
-    }),
+  try {
+    const postUser = await fetch('http://localhost:3001/api/google-login', {
+      method: 'POST',
 
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-}
+      body: JSON.stringify({
+        "firstName": firstName,
+        "lastName": lastName,
+        "tokenID": tokenId,
+        "profilePicUrl": profilePicURL,
+        "email": email
+      }),
 
-interface MessageInterface {
-  type?: string,
-  userWhoSent: string,
-  msg: string
-}
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
 
-const RegisterOrLogin = (props: { action: string }) => {
-  if (props.action === 'register') {
+    await fetch(`http://localhost:3001/current-user?email=${email}`);
+    if (postUser.ok) window.location.href = 'http://localhost:3000/public-chat';
 
+  } catch (error) {
+    console.log(error);
   }
 }
 
+
 const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) => {
+  if (props.googleClientId === '') return null;
 
   if (props.isUserLoggedIn) {
+    window.location.href = 'http://localhost:3000/lobby';
     return null;
   }
 
-  return(
+  return (
     <div className='register'>
       <h3>Register / Login</h3>
       <input type='text' placeholder='Enter username' />
@@ -71,75 +69,14 @@ const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) =
   );
 }
 
-const DisplayMessages = (props: { messagesData: MessageInterface[] }) => {
-  return(
-    <div className='chatContainer'>
-        {
-          props.messagesData.length > 0 ? props.messagesData.map(({ userWhoSent, msg }: MessageInterface) => <h3 key={nanoid()}>{userWhoSent}: {msg}</h3>) : null
-        } 
-    </div>
-  );
-}
+/* 
+  @TODO:
+    1. Create routes(/lobby) with react-router and API for that routes
+    2. Should also make registration/login from website
+*/
 
-function ChatContainer() {
-  const [messages, setMessages] = useState<MessageInterface[]>([]);
-  const [username, setUsername] = useState('');
-  const [inputValue, setInputValue] = useState('');
-
-
-  useEffect(() => {
-    client.onopen = () => {
-      console.log("Connected to WebSocket successfuly")
-    }
-
-    client.onmessage = (msg: any) => {
-      const dataFromServer = JSON.parse(msg.data);
-
-      const obj: MessageInterface = {
-        type: dataFromServer.type,
-        userWhoSent: dataFromServer.userWhoSent,
-        msg: dataFromServer.msg
-      };
-
-      if (dataFromServer.recentMessages.length === 0) {
-        const arr: Array<MessageInterface> = messages.concat(obj);
-        setMessages(arr);
-      } else {
-        const arr: Array<MessageInterface> = messages.concat(...dataFromServer.recentMessages, obj);
-        setMessages(arr)
-      }
-    }
-
-    const temporaryUsername = prompt('Enter your username: ');
-
-    setUsername(typeof temporaryUsername === 'string' ? temporaryUsername : '');
-  }, []);
-  
-  const sendMessage = (value: string): void => {
-    if (value.length === 0) {
-      return;
-    }
-
-    client.send(JSON.stringify({
-      recentMessages: messages,
-      type: "message",
-      userWhoSent: username,
-      msg: value
-    }));
-  }
-  
-  const getValueFromInputField = (event: any) => {
-    setInputValue(event.target.value);
-  }
-  
-  return (
-    <div className="App">
-      <DisplayMessages messagesData={messages} />
-      <input type='text' className="messageInput" onChange={(event) => getValueFromInputField(event)} />
-      <br />
-      <button onClick={() => sendMessage(inputValue)}>Send message</button>
-    </div>
-  );
+const Lobby = () => {
+  return <h2>hi</h2>
 }
 
 function App() {
@@ -148,11 +85,21 @@ function App() {
 
   useEffect(() => {
     fetch('http://localhost:3001/api/app-params')
-    .then(response => response.json())
-    .then(result => setGoogleClientID(result.GoogleClientID));
+      .then(response => response.json())
+      .then(result => setGoogleClientID(result.GoogleClientID))
+      .catch(err => console.log(err));
   }, []);
 
-  return googleClientID !== '' ? <LoginPage isUserLoggedIn={isLoggedIn} googleClientId={googleClientID} /> : null;
+  return (
+    <Router>
+      <Routes>
+        <Route path='/' element={<Navigate to='login' />} />
+        <Route path='/public-chat' element={<ChatWrapper />} />
+        <Route path='/login' element={<LoginPage isUserLoggedIn={isLoggedIn} googleClientId={googleClientID} />} />
+        <Route path='/lobby' element={<Lobby />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

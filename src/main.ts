@@ -39,8 +39,10 @@ app.post('/api/google-login', async (req, res) => {
       "email": req.body.email
    });
 
-   console.log(userInfo);
+   // console.log(userInfo);
    await userInfo.save();
+
+   res.end();
 });
 
 app.post('/new-user', async (req, res) => {
@@ -50,6 +52,16 @@ app.post('/new-user', async (req, res) => {
       password: hashPassword(req.body.password)
    });
    await user.save()
+});
+
+app.get('/current-user', async (req, res) => {
+   await mongoose.connect(dbURI);
+   GoogleAuthenticatedUser.findOne({ email: req.query.email }, (err: any, docs: any) => {
+      if (err) throw new err;
+
+      console.log('ayoooo', docs);
+      );
+   });
 });
 
 app.listen(PORT);
