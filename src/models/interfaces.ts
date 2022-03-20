@@ -15,3 +15,11 @@ export interface GoogleRegisterFields {
    email: String,
    save: Function
 }
+
+export interface LocallyRegisterFields {
+   firstName: String,
+   lastName: String,
+   username: String,
+   password: String,
+   save: Function
+}

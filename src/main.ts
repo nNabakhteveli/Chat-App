@@ -1,11 +1,7 @@
-import express, { Application} from 'express';
+import express, { Application } from 'express';
 import bodyParser from 'body-parser';
-import { NormalUser } from './models/normalUserSchema';
-import { GoogleAuthenticatedUser } from './models/googleUserSchema';
-import { hashPassword } from './lib/encryptPassword';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import User from './controllers/User';
 
 
@@ -16,8 +12,12 @@ const PORT: number = 3001 || Number(process.env.PORT);
 const dbURI: string = `mongodb+srv://${process.env.MongoDBUsername}:${process.env.MongoDBPass}@chatapp-cluster.j5wns.mongodb.net/chatapp-db?retryWrites=true&w=majority`;
 
 
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
+// Parse URL-encoded bodies (sent by HTML form)
+app.use(express.urlencoded({ extended: true }));
+// Parse JSON bodies (sent by API clients)
+app.use(express.json());
 
 
 app.get('/users', (req, res) => { User.getUser(req, res) });
@@ -30,22 +30,16 @@ app.get('/api/app-params', (req, res) => {
 
 app.post('/api/google-login', (req, res) => User.googleLogin(req, res));
 
-app.post('/new-user', async (req, res) => {
-   await mongoose.connect(dbURI);
-   const user = new NormalUser({
-      username: req.body.username,
-      password: hashPassword(req.body.password)
-   });
-   await user.save()
-});
+app.post('/register-user', (req, res) => User.registerUser(req, res));
 
 
-app.get('/current-user', async (req, res) => {
-   await mongoose.connect(dbURI);
 
-   const getUser: any = await GoogleAuthenticatedUser.findOne({ email: req.query.email });
+// app.get('/current-user', async (req, res) => {
+//    await mongoose.connect(dbURI);
 
-   res.json(JSON.stringify(getUser));
-});
+//    const getUser: any = await GoogleAuthenticatedUser.findOne({ email: req.query.email });
+
+//    res.json(JSON.stringify(getUser));
+// });
 
 app.listen(PORT);

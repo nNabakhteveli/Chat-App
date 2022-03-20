@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { GoogleLogin } from 'react-google-login';
 import ChatWrapper from './components/chat/ChatWrapper';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -54,28 +54,97 @@ const LoginForm = () => {
       <input type='password' name='password' />
 
       <br />
-      <input type='submit' />
+      <input type='submit' value='Login' />
     </form>
   );
 }
 
 const RegisterForm = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const stateSetter = (state: string, data: string) => {
+    switch (state) {
+      case 'firstName':
+        setFirstName(data);
+        break;
+
+      case 'lastName':
+        setLastName(data);
+        break;
+
+      case 'username':
+        setUsername(data);
+        break;
+
+      case 'password':
+        setPassword(data);
+        break;
+    }
+  }
+
+  const getInputValue = (e: FormEvent) => (e.target as HTMLTextAreaElement).value;
+
+  const submitUserData = async (event: any) => {
+    event.preventDefault();
+
+    const isFormValid = [firstName, lastName, username, password].every((value: string) => value.length > 0);
+    let isUsernameAlreadyUsed = false;
+
+    await fetch('http://localhost:3001/users')
+      .then(response => response.json())
+      .then(data => {
+        for (let i = 0; i < data.length; i++) {
+          if (username.trim().toLowerCase() === data[i].username.trim().toLowerCase()) {
+            isUsernameAlreadyUsed = true;
+          }
+        }
+      });
+
+    if (isUsernameAlreadyUsed) {
+      return;
+    }
+
+    if (isFormValid) {
+      await fetch('http://localhost:3001/register-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          'firstName': firstName,
+          'lastName': lastName,
+          'username': username,
+          'password': password
+        })
+      });
+
+      /*
+        DO SOMETHING AFTER POST 
+      */
+    } else {
+      return;
+    }
+  }
+
   return (
     <form className='form registerForm'>
       <label>First name</label>
-      <input type='text' name='firstName' />
+      <input type='text' name='firstName' onInput={(event) => stateSetter('firstName', getInputValue(event))} />
 
       <label>Last name</label>
-      <input type='text' name='lastName' />
+      <input type='text' name='lastName' onInput={(event) => stateSetter('lastName', getInputValue(event))} />
 
       <label>Username</label>
-      <input type='text' name='username' />
+      <input type='text' name='username' onInput={(event) => stateSetter('username', getInputValue(event))} />
 
       <label>Password</label>
-      <input type='password' name='password' />
+      <input type='password' name='password' onInput={(event) => stateSetter('password', getInputValue(event))} />
 
       <br />
-      <input type='submit' />
+      <input type='submit' value='Register' onClick={(e) => submitUserData(e)} />
     </form>
   );
 }

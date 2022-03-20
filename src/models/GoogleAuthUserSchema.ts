@@ -28,4 +28,4 @@ const userSchema = new Schema({
 
 }, { timestamps: true });
 
-export const GoogleAuthenticatedUser = mongoose.model('google_authenticated_users', userSchema);
+export const GoogleAuthenticatedUserModel = mongoose.model('google_authenticated_users', userSchema);

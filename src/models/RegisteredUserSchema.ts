@@ -23,4 +23,4 @@ const userSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-export const NormalUser = mongoose.model('registered_users', userSchema)
+export const RegisteredUserModel = mongoose.model('registered_users', userSchema)

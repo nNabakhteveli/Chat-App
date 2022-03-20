@@ -1,6 +1,6 @@
 import { connect } from 'mongoose';
-import { MongoDBUser, GoogleRegisterFields } from './interfaces';
-import { NormalUser } from './normalUserSchema';
+import { MongoDBUser, GoogleRegisterFields, LocallyRegisterFields } from './interfaces';
+import { RegisteredUserModel } from './RegisteredUserSchema';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,7 +10,7 @@ const dbURI: string = `mongodb+srv://${process.env.MongoDBUsername}:${process.en
 export async function getUserFromDB(): Promise<MongoDBUser[]> {
    return new Promise((resolve, reject) => {
       connect(dbURI)
-      .then(() => NormalUser.find())
+      .then(() => RegisteredUserModel.find())
       .then((response: any) => resolve(response))
       .catch(() => {
          reject('Could not find the user');
@@ -30,3 +30,14 @@ export function createGoogleUser(userInfo: GoogleRegisterFields) {
    });
 }
 
+export function registerUser(registerFormBody: LocallyRegisterFields) {
+   return new Promise((resolve, reject) => {
+      connect(dbURI)
+      .then(() => registerFormBody.save())
+      .then(() => resolve("User registered successfuly"))
+      .catch((error: any) => {
+         reject("Couldn't register the user");
+         console.log(error);
+      });
+   });
+}
