@@ -1,16 +1,17 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { GoogleLogin } from 'react-google-login';
 import ChatWrapper from './components/chat/ChatWrapper';
+import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 
+const client = new W3CWebSocket('ws://127.0.0.1:8000')
+
 const responseGoogle = async (response: any) => {
   if (response.hasOwnProperty('error')) {
-    console.log(response);
     throw new Error("Something went wrong during Google authentication");
   }
-  console.log(response);
 
   const firstName = response.Du.VX;
   const lastName = response.Du.iW;
@@ -36,7 +37,6 @@ const responseGoogle = async (response: any) => {
       }
     });
 
-    await fetch(`http://localhost:3001/current-user?email=${email}`);
     if (postUser.ok) window.location.href = `http://localhost:3000/public-chat?firstName=${firstName}&lastName=${lastName}`;
 
   } catch (error) {
@@ -44,17 +44,59 @@ const responseGoogle = async (response: any) => {
   }
 }
 
+
+const getInputValue = (e: FormEvent) => (e.target as HTMLTextAreaElement).value;
+
 const LoginForm = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const stateSetter = (state: string, data: string) => {
+    switch (state) {
+      case 'username':
+        setUsername(data);
+        break;
+
+      case 'password':
+        setPassword(data);
+        break;
+    }
+  }
+
+  const submitUserData = async (event: any) => {
+    event.preventDefault();
+
+    const registerResponse = await fetch('http://localhost:3001/user/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        'username': username,
+        'password': password
+      })
+    });
+
+    if (registerResponse.status === 200 && registerResponse.ok) {
+      client.send(JSON.stringify({
+        type: "message",
+        userWhoSent: username,
+        msg: username + ' joined the chat.'
+      }));
+      window.location.href = `http://localhost:3000/public-chat?username=${username}`;
+    }
+  }
+
   return (
     <form className='form loginForm'>
       <label>Username</label>
-      <input type='text' name='username' />
+      <input type='text' name='username' onInput={(event) => stateSetter('username', getInputValue(event))} />
 
       <label>Password</label>
-      <input type='password' name='password' />
+      <input type='password' name='password' onInput={(event) => stateSetter('password', getInputValue(event))} />
 
       <br />
-      <input type='submit' value='Login' />
+      <input type='submit' value='Login' onClick={(e) => submitUserData(e)} />
     </form>
   );
 }
@@ -85,8 +127,6 @@ const RegisterForm = () => {
     }
   }
 
-  const getInputValue = (e: FormEvent) => (e.target as HTMLTextAreaElement).value;
-
   const submitUserData = async (event: any) => {
     event.preventDefault();
 
@@ -108,7 +148,7 @@ const RegisterForm = () => {
     }
 
     if (isFormValid) {
-      await fetch('http://localhost:3001/register-user', {
+      const registerResponse = await fetch('http://localhost:3001/user/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -121,9 +161,14 @@ const RegisterForm = () => {
         })
       });
 
-      /*
-        DO SOMETHING AFTER POST 
-      */
+      if (registerResponse.status === 200 && registerResponse.ok) {
+        client.send(JSON.stringify({
+          type: "message",
+          // userWhoSent: username,
+          msg: username + ' joined the chat.'
+        }));
+        window.location.href = `http://localhost:3000/public-chat?firstName=${firstName}&lastName=${lastName}`;
+      }
     } else {
       return;
     }
@@ -179,15 +224,6 @@ const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) =
   );
 }
 
-/* 
-  @TODO:
-    1. Create routes(/lobby) with react-router and API for that routes
-    2. Should also make registration/login from website
-*/
-
-const Lobby = () => {
-  return <h2>hi</h2>
-}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -206,7 +242,6 @@ function App() {
         <Route path='/' element={<Navigate to='login' />} />
         <Route path='/public-chat' element={<ChatWrapper />} />
         <Route path='/login' element={<LoginPage isUserLoggedIn={isLoggedIn} googleClientId={googleClientID} />} />
-        <Route path='/lobby' element={<Lobby />} />
       </Routes>
     </Router>
   );

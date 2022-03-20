@@ -1,9 +1,8 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import User from './controllers/User';
-
+import User from '../controllers/User';
 
 dotenv.config();
 
@@ -30,17 +29,9 @@ app.get('/api/app-params', (req, res) => {
 
 app.post('/api/google-login', (req, res) => User.googleLogin(req, res));
 
-app.post('/register-user', (req, res) => User.registerUser(req, res));
+app.post('/user/register', (req, res) => User.registerUser(req, res));
 
-app.post('/login', (req, res) => User.loginHandler(req, res));
+app.post('/user/login', (req, res) => User.loginHandler(req, res));
 
-
-// app.get('/current-user', async (req, res) => {
-//    await mongoose.connect(dbURI);
-
-//    const getUser: any = await GoogleAuthenticatedUser.findOne({ email: req.query.email });
-
-//    res.json(JSON.stringify(getUser));
-// });
 
 app.listen(PORT);

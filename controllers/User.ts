@@ -10,7 +10,7 @@ export default {
    async getUser(req: Request, res: Response) {
       Models.getUserFromDB()
       .then((result: Array<MongoDBUser>) => res.json(result))
-      .catch((err: any) => console.log(err));
+      .catch(err => console.log(err));
    },
 
    async googleLogin(req: Request, res: Response) {
@@ -38,7 +38,6 @@ export default {
          }
       }
 
-      console.log("hereee");
       const postData = new RegisteredUserModel({
          firstName: req.body.firstName,
          lastName: req.body.lastName,

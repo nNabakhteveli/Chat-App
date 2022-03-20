@@ -37,11 +37,17 @@ export default function ChatWrapper() {
 		}
 
 		interface QueryInterface {
-			firstName: String,
-			lastName: String
+			firstName?: String,
+			lastName?: String,
+			username?: String
 		}
-		const queryFromUrl = new Url(window.location.href, true).query;
-		setUsername(queryFromUrl.firstName + ' ' + queryFromUrl.lastName);
+		const queryFromUrl: QueryInterface = new Url(window.location.href, true).query;
+
+		if ('username' in queryFromUrl) {
+			setUsername(String(queryFromUrl.username));
+		} else {
+			setUsername(queryFromUrl.firstName + ' ' + queryFromUrl.lastName);
+		}
 	}, []);
 
 	const sendMessage = (value: string): void => {

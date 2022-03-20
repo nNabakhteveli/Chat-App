@@ -2,8 +2,7 @@ import { connect } from 'mongoose';
 import { MongoDBUser, GoogleRegisterFields, LocallyRegisterFields } from './interfaces';
 import { RegisteredUserModel } from './RegisteredUserSchema';
 import dotenv from 'dotenv';
-import { hashPassword, compareToHashedPassword } from '../lib/encryptPassword';
-import { addAbortSignal } from 'stream';
+import { compareToHashedPassword } from '../lib/encryptPassword';
 
 dotenv.config();
 
