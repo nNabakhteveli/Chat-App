@@ -52,7 +52,6 @@ export async function checkLogin(username: string, password: string) {
          try {
             const comparePasswords = await compareToHashedPassword(password, String(response[i].password));
             
-            console.log(comparePasswords);
             if (comparePasswords) {
                return {
                   success: true,
