@@ -1,7 +1,7 @@
 import express, { Application} from 'express';
 import bodyParser from 'body-parser';
-import { NormalUser } from './models/normalUser';
-import { GoogleAuthenticatedUser } from './models/googleUser';
+import { NormalUser } from './models/normalUserSchema';
+import { GoogleAuthenticatedUser } from './models/googleUserSchema';
 import { hashPassword } from './lib/encryptPassword';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -22,7 +22,6 @@ app.use(cors());
 
 app.get('/users', (req, res) => { User.getUser(req, res) });
 
-
 app.get('/api/app-params', (req, res) => {
    res.json({
       "GoogleClientID": process.env.GoogleClientID
@@ -40,6 +39,7 @@ app.post('/new-user', async (req, res) => {
    await user.save()
 });
 
+
 app.get('/current-user', async (req, res) => {
    await mongoose.connect(dbURI);
 
@@ -49,22 +49,3 @@ app.get('/current-user', async (req, res) => {
 });
 
 app.listen(PORT);
-
-function fn(req: any, res: any, next: any): any {
-   throw new Error('Function not implemented.');
-}
-
-
-function req(req: any, res: any, next: any): any {
-   throw new Error('Function not implemented.');
-}
-
-
-function res(req: any, res: any, next: any): any {
-   throw new Error('Function not implemented.');
-}
-
-
-function next(req: any, res: any, next: any): any {
-   throw new Error('Function not implemented.');
-}

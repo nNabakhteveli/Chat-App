@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { getUserFromDB, createGoogleUser } from '../models/models';
-import { GoogleAuthenticatedUser } from '../models/googleUser';
+import { getUserFromDB, createGoogleUser } from '../models/routerHandlers';
+import { GoogleAuthenticatedUser } from '../models/googleUserSchema';
 import { MongoDBUser } from '../models/interfaces';
 
 

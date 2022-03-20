@@ -1,6 +1,16 @@
 import * as mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
+   firstName: {
+      type: String,
+      required: true
+   },
+
+   lastName: {
+      type: String,
+      required: true
+   },
+
    username: {
       type: String,
       required: true
@@ -13,4 +23,4 @@ const userSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-export const NormalUser = mongoose.model('user_info', userSchema)
+export const NormalUser = mongoose.model('registered_users', userSchema)

@@ -1,7 +1,6 @@
-import * as mongoose from 'mongoose';
 import { connect } from 'mongoose';
 import { MongoDBUser, GoogleRegisterFields } from './interfaces';
-import { NormalUser } from './normalUser';
+import { NormalUser } from './normalUserSchema';
 import dotenv from 'dotenv';
 
 dotenv.config();

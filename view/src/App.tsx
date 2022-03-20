@@ -44,8 +44,44 @@ const responseGoogle = async (response: any) => {
   }
 }
 
+const LoginForm = () => {
+  return (
+    <form className='form loginForm'>
+      <label>Username</label>
+      <input type='text' name='username' />
+
+      <label>Password</label>
+      <input type='password' name='password' />
+
+      <br />
+      <input type='submit' />
+    </form>
+  );
+}
+
+const RegisterForm = () => {
+  return (
+    <form className='form registerForm'>
+      <label>First name</label>
+      <input type='text' name='firstName' />
+
+      <label>Last name</label>
+      <input type='text' name='lastName' />
+
+      <label>Username</label>
+      <input type='text' name='username' />
+
+      <label>Password</label>
+      <input type='password' name='password' />
+
+      <br />
+      <input type='submit' />
+    </form>
+  );
+}
 
 const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) => {
+  const [loginOrRegister, setLoginOrRegister] = useState('register');
   if (props.googleClientId === '') return null;
 
   if (props.isUserLoggedIn) {
@@ -55,8 +91,13 @@ const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) =
 
   return (
     <div className='register'>
-      <h3>Register / Login</h3>
-      <input type='text' placeholder='Enter username' />
+      <div className='registerOrLogin'>
+        <h3 onClick={() => setLoginOrRegister('register')} className='registerOrLogin'>Register</h3>
+        <h3>/</h3>
+        <h3 onClick={() => setLoginOrRegister('login')} className='registerOrLogin'>Login</h3>
+      </div>
+      {loginOrRegister === 'register' ? <RegisterForm /> : <LoginForm />}
+
       <h3>or</h3>
       <GoogleLogin
         clientId={props.googleClientId}
