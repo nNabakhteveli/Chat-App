@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { MessageInterface } from "../interfaces";
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import { DisplayMessages } from "./DisplayMessages";
+import Url from 'url-parse';
+
 
 
 const client = new W3CWebSocket('ws://127.0.0.1:8000')
@@ -34,11 +36,12 @@ export default function ChatWrapper() {
 			}
 		}
 
-		const temporaryUsername = prompt('Enter your username: ');
-
-
-
-		setUsername(typeof temporaryUsername === 'string' ? temporaryUsername : '');
+		interface QueryInterface {
+			firstName: String,
+			lastName: String
+		}
+		const queryFromUrl = new Url(window.location.href, true).query;
+		setUsername(queryFromUrl.firstName + ' ' + queryFromUrl.lastName);
 	}, []);
 
 	const sendMessage = (value: string): void => {

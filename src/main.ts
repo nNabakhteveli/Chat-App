@@ -1,4 +1,3 @@
-
 import express, { Application} from 'express';
 import bodyParser from 'body-parser';
 import { NormalUser } from './models/normalUser';
@@ -7,6 +6,8 @@ import { hashPassword } from './lib/encryptPassword';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import User from './controllers/User';
+
 
 dotenv.config();
 
@@ -14,13 +15,13 @@ const app: Application = express();
 const PORT: number = 3001 || Number(process.env.PORT);
 const dbURI: string = `mongodb+srv://${process.env.MongoDBUsername}:${process.env.MongoDBPass}@chatapp-cluster.j5wns.mongodb.net/chatapp-db?retryWrites=true&w=majority`;
 
+
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get('/users', async (req, res) => {
-   await mongoose.connect(dbURI);
-   NormalUser.find().then((response: any) => { res.send(response) });
-});
+
+app.get('/users', (req, res) => { User.getUser(req, res) });
+
 
 app.get('/api/app-params', (req, res) => {
    res.json({
@@ -28,22 +29,7 @@ app.get('/api/app-params', (req, res) => {
    });
 });
 
-app.post('/api/google-login', async (req, res) => {
-   await mongoose.connect(dbURI);
-   
-   const userInfo = new GoogleAuthenticatedUser({
-      "firstName": req.body.firstName,
-      "lastName": req.body.lastName,
-      "tokenID": req.body.tokenID,
-      "profilePicUrl": req.body.profilePicURL,
-      "email": req.body.email
-   });
-
-   // console.log(userInfo);
-   await userInfo.save();
-
-   res.end();
-});
+app.post('/api/google-login', (req, res) => User.googleLogin(req, res));
 
 app.post('/new-user', async (req, res) => {
    await mongoose.connect(dbURI);
@@ -56,12 +42,29 @@ app.post('/new-user', async (req, res) => {
 
 app.get('/current-user', async (req, res) => {
    await mongoose.connect(dbURI);
-   GoogleAuthenticatedUser.findOne({ email: req.query.email }, (err: any, docs: any) => {
-      if (err) throw new err;
 
-      console.log('ayoooo', docs);
-      );
-   });
+   const getUser: any = await GoogleAuthenticatedUser.findOne({ email: req.query.email });
+
+   res.json(JSON.stringify(getUser));
 });
 
 app.listen(PORT);
+
+function fn(req: any, res: any, next: any): any {
+   throw new Error('Function not implemented.');
+}
+
+
+function req(req: any, res: any, next: any): any {
+   throw new Error('Function not implemented.');
+}
+
+
+function res(req: any, res: any, next: any): any {
+   throw new Error('Function not implemented.');
+}
+
+
+function next(req: any, res: any, next: any): any {
+   throw new Error('Function not implemented.');
+}

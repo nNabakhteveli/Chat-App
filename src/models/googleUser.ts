@@ -23,9 +23,9 @@ const userSchema = new Schema({
 
    profilePicURL: {
       type: String,
-      required: false
+      required: true
    }
 
 }, { timestamps: true });
 
-export const GoogleAuthenticatedUser = mongoose.model('google_user_info', userSchema)
+export const GoogleAuthenticatedUser = mongoose.model('google_user_info', userSchema);

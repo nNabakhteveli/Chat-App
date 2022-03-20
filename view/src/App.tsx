@@ -26,7 +26,7 @@ const responseGoogle = async (response: any) => {
         "firstName": firstName,
         "lastName": lastName,
         "tokenID": tokenId,
-        "profilePicUrl": profilePicURL,
+        "profilePicURL": profilePicURL,
         "email": email
       }),
 
@@ -37,7 +37,7 @@ const responseGoogle = async (response: any) => {
     });
 
     await fetch(`http://localhost:3001/current-user?email=${email}`);
-    if (postUser.ok) window.location.href = 'http://localhost:3000/public-chat';
+    if (postUser.ok) window.location.href = `http://localhost:3000/public-chat?firstName=${firstName}&lastName=${lastName}`;
 
   } catch (error) {
     console.log(error);
