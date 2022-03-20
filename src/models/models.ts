@@ -2,6 +2,8 @@ import { connect } from 'mongoose';
 import { MongoDBUser, GoogleRegisterFields, LocallyRegisterFields } from './interfaces';
 import { RegisteredUserModel } from './RegisteredUserSchema';
 import dotenv from 'dotenv';
+import { hashPassword, compareToHashedPassword } from '../lib/encryptPassword';
+import { addAbortSignal } from 'stream';
 
 dotenv.config();
 
@@ -34,10 +36,38 @@ export function registerUser(registerFormBody: LocallyRegisterFields) {
    return new Promise((resolve, reject) => {
       connect(dbURI)
       .then(() => registerFormBody.save())
-      .then(() => resolve("User registered successfuly"))
+      .then(() => resolve("User registered successfuly")) 
       .catch((error: any) => {
          reject("Couldn't register the user");
          console.log(error);
       });
    });
+}
+
+export async function checkLogin(username: string, password: string) {
+   const response = await getUserFromDB();
+
+   for (let i = 0; i < response.length; i++) {
+      if (username.trim().toLowerCase() === response[i].username.trim().toLowerCase()) {
+         try {
+            const comparePasswords = await compareToHashedPassword(password, String(response[i].password));
+            
+            console.log(comparePasswords);
+            if (comparePasswords) {
+               return {
+                  success: true,
+                  data: response[i]
+               };
+            }
+         } catch (err) {
+            console.log(err);
+         }
+      }
+   }
+
+   return {
+      success: false,
+      code: 404,
+      error: 'Could not find the user. Wrong username or password.'
+   }
 }

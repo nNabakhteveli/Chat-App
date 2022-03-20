@@ -32,6 +32,7 @@ app.post('/api/google-login', (req, res) => User.googleLogin(req, res));
 
 app.post('/register-user', (req, res) => User.registerUser(req, res));
 
+app.post('/login', (req, res) => User.loginHandler(req, res));
 
 
 // app.get('/current-user', async (req, res) => {
