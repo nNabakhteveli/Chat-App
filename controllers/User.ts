@@ -1,10 +1,17 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import * as Models from '../models/models';
 import { GoogleAuthenticatedUserModel } from '../models/GoogleAuthUserSchema';
 import { RegisteredUserModel } from '../models/RegisteredUserSchema';
 import { MongoDBUser } from '../models/interfaces';
 import { hashPassword } from '../lib/encryptPassword';
+import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
+dotenv.config();
+
+interface CustomRequest extends Request {
+   token?: String
+}
 
 export default {
    async getUser(req: Request, res: Response) {
@@ -47,7 +54,7 @@ export default {
 
       try {
          await Models.registerUser(postData);
-         res.end('User registered successfuly');
+         res.status(201).send('User registered successfuly');
       } catch (err) {
          console.log(err);
          res.end('Could not register the user');
@@ -71,5 +78,46 @@ export default {
          });
          return;
       }
+   },
+
+   createJWTtoken(req: Request, res: Response) {
+      const user = {
+         firstName: req.body.firstName,
+         lastName: req.body.lastName,
+         username: req.body.username
+      }
+
+      jwt.sign({ user }, (process.env.ACCESS_TOKEN_SECRET as string), (err: any, token: any) => {
+         if (err) throw err;
+
+         res.json({
+            token
+         });
+      });
+   },
+
+   verifyToken(req: CustomRequest, res: Response, next: NextFunction) {
+      const bearerToken = req.headers['authorization'];
+
+      if (typeof bearerToken !== 'undefined') {
+         const token = bearerToken.split(' ')[1];
+
+         req.token = token;
+         next();
+      } else {
+         res.sendStatus(403);
+      }
+   },
+
+   getParticularUser(req: CustomRequest, res: Response) {
+      jwt.verify((req.token as string), (process.env.ACCESS_TOKEN_SECRET as string), (err: any, authData: any) => {
+         if (err) {
+            res.sendStatus(403);
+         } else {
+            res.json({
+               data: authData
+            });
+         }
+      });
    }
 }

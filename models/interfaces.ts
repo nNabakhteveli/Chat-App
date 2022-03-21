@@ -1,9 +1,11 @@
 export interface MongoDBUser {
    _id?: Object,
+   firstName: String,
+   lastName: String,
    username: String,
    password: String,
-   createdAt: Date,
-   updatedAt: Date,
+   createdAt?: Date,
+   updatedAt?: Date,
    __v?: number
 }
 
