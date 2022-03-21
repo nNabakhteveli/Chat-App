@@ -19,6 +19,17 @@ export async function getUserFromDB(): Promise<MongoDBUser[]> {
    });
 }
 
+export async function getOneUserFromDB(username: string): Promise<MongoDBUser> {
+   return new Promise((resolve, reject) => {
+      connect(dbURI)
+      .then(() => RegisteredUserModel.findOne({ username: username }))
+      .then((response: MongoDBUser) => resolve(response))
+      .catch(() => {
+         reject('Could not find the user');
+      });
+   });
+}
+
 export function createGoogleUser(userInfo: GoogleRegisterFields) {
    return new Promise((resolve, reject) => {
       connect(dbURI)

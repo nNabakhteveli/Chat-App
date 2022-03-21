@@ -1,6 +1,6 @@
 import http from 'http';
 import { server as WebSocketServer } from 'websocket';
-import express, { Application, Request, Response } from 'express';
+import express, { Application } from 'express';
 import { nanoid } from 'nanoid';
 
 const webSocketsServerPort = 8000;
@@ -35,5 +35,5 @@ wsServer.on('request', (request) => {
             clients[key].sendUTF(message.utf8Data);
          }
       } 
-   })
-})
+   });
+});

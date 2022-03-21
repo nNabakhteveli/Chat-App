@@ -10,7 +10,7 @@ import jwt from 'jsonwebtoken';
 dotenv.config();
 
 interface CustomRequest extends Request {
-   token?: String
+   token?: string
 }
 
 export default {
@@ -87,13 +87,17 @@ export default {
          username: req.body.username
       }
 
-      jwt.sign({ user }, (process.env.ACCESS_TOKEN_SECRET as string), (err: any, token: any) => {
-         if (err) throw err;
-
-         res.json({
-            token
+      try {
+         jwt.sign({ user }, (process.env.ACCESS_TOKEN_SECRET as string), (err: any, token: any) => {
+            if (err) throw err;
+            
+            res.json({
+               token
+            });
          });
-      });
+      } catch (err) {
+         console.log(err);
+      }
    },
 
    verifyToken(req: CustomRequest, res: Response, next: NextFunction) {
@@ -109,14 +113,34 @@ export default {
       }
    },
 
-   getParticularUser(req: CustomRequest, res: Response) {
-      jwt.verify((req.token as string), (process.env.ACCESS_TOKEN_SECRET as string), (err: any, authData: any) => {
+   checkToken(req: CustomRequest, res: Response, callback: (_authdata: Object) => void) {
+      if (typeof req.token === 'undefined') {
+         res.sendStatus(401);
+      }
+
+      jwt.verify((req.token as string), (process.env.ACCESS_TOKEN_SECRET as string), async (err: any, authData: any) => {
          if (err) {
             res.sendStatus(403);
          } else {
+            callback(authData);
+         }
+      });
+   },
+
+   getParticularUser(req: CustomRequest, res: Response) {
+      this.checkToken(req, res, async (authData : MongoDBUser | any) => {
+         try {
+            const response = await Models.getOneUserFromDB(authData.user.username);
+            
+            if (response === null) {
+               res.sendStatus(404);
+               return;
+            }
             res.json({
-               data: authData
+               data: response
             });
+         } catch (err) {
+            throw err;
          }
       });
    }

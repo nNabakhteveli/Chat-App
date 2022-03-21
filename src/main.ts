@@ -2,7 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import User from '../controllers/User';
+import UserController from '../controllers/User';
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 
-app.get('/users', (req, res) => { User.getUser(req, res) });
+app.get('/users', (req, res) => { UserController.getUser(req, res) });
 
 app.get('/api/app-params', (req, res) => {
    res.json({
@@ -27,11 +27,16 @@ app.get('/api/app-params', (req, res) => {
    });
 });
 
-app.post('/api/google-login', (req, res) => User.googleLogin(req, res));
+app.post('/api/google-login', (req, res) => UserController.googleLogin(req, res));
 
-app.post('/user/register', (req, res) => User.registerUser(req, res));
+// Required fields: firstName, lastName, username, password.
+app.post('/user/register', (req, res) => UserController.registerUser(req, res));
 
-app.post('/user/login', (req, res) => User.loginHandler(req, res));
+app.post('/user/login', (req, res) => UserController.loginHandler(req, res));
+
+app.post('/token', (req, res) => UserController.createJWTtoken(req, res));
+
+app.post('/profile', UserController.verifyToken, (req, res) => { UserController.getParticularUser(req, res) });
 
 
 app.listen(PORT);

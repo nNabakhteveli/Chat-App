@@ -4,46 +4,10 @@ import ChatWrapper from './components/chat/ChatWrapper';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import ResponseGoogle from './components/googleRegistration';
 
 
 const client = new W3CWebSocket('ws://127.0.0.1:8000')
-
-const responseGoogle = async (response: any) => {
-  if (response.hasOwnProperty('error')) {
-    throw new Error("Something went wrong during Google authentication");
-  }
-
-  const firstName = response.Du.VX;
-  const lastName = response.Du.iW;
-  const tokenId = response.tokenId;
-  const profilePicURL = response.profileObj.imageUrl;
-  const email = response.profileObj.email;
-
-  try {
-    const postUser = await fetch('http://localhost:3001/api/google-login', {
-      method: 'POST',
-
-      body: JSON.stringify({
-        "firstName": firstName,
-        "lastName": lastName,
-        "tokenID": tokenId,
-        "profilePicURL": profilePicURL,
-        "email": email
-      }),
-
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (postUser.ok) window.location.href = `http://localhost:3000/public-chat?firstName=${firstName}&lastName=${lastName}`;
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 
 const getInputValue = (e: FormEvent) => (e.target as HTMLTextAreaElement).value;
 
@@ -131,6 +95,7 @@ const RegisterForm = () => {
     event.preventDefault();
 
     const isFormValid = [firstName, lastName, username, password].every((value: string) => value.length > 0);
+    console.log('isFormValid', isFormValid)
     let isUsernameAlreadyUsed = false;
 
     await fetch('http://localhost:3001/users')
@@ -144,6 +109,7 @@ const RegisterForm = () => {
       });
 
     if (isUsernameAlreadyUsed) {
+      console.log("username already used")
       return;
     }
 
@@ -161,15 +127,11 @@ const RegisterForm = () => {
         })
       });
 
-      if (registerResponse.status === 200 && registerResponse.ok) {
-        client.send(JSON.stringify({
-          type: "message",
-          // userWhoSent: username,
-          msg: username + ' joined the chat.'
-        }));
-        window.location.href = `http://localhost:3000/public-chat?firstName=${firstName}&lastName=${lastName}`;
-      }
+      console.log(registerResponse, registerResponse)
+      if (registerResponse.status === 201 && registerResponse.ok)
+        window.location.href = `http://localhost:3000/public-chat?username=${username}`;
     } else {
+      console.log("Something went wrong :(")
       return;
     }
   }
@@ -194,14 +156,9 @@ const RegisterForm = () => {
   );
 }
 
-const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) => {
+const LoginPage = (props: { googleClientId: string }) => {
   const [loginOrRegister, setLoginOrRegister] = useState('register');
   if (props.googleClientId === '') return null;
-
-  if (props.isUserLoggedIn) {
-    window.location.href = 'http://localhost:3000/lobby';
-    return null;
-  }
 
   return (
     <div className='register'>
@@ -216,8 +173,8 @@ const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) =
       <GoogleLogin
         clientId={props.googleClientId}
         buttonText="Log in with Google"
-        onSuccess={responseGoogle}
-        onFailure={responseGoogle}
+        onSuccess={ResponseGoogle}
+        onFailure={ResponseGoogle}
         cookiePolicy={'single_host_origin'}
       />
     </div>
@@ -226,7 +183,6 @@ const LoginPage = (props: { isUserLoggedIn: boolean, googleClientId: string }) =
 
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [googleClientID, setGoogleClientID] = useState('');
 
   useEffect(() => {
@@ -241,7 +197,7 @@ function App() {
       <Routes>
         <Route path='/' element={<Navigate to='login' />} />
         <Route path='/public-chat' element={<ChatWrapper />} />
-        <Route path='/login' element={<LoginPage isUserLoggedIn={isLoggedIn} googleClientId={googleClientID} />} />
+        <Route path='/login' element={<LoginPage googleClientId={googleClientID} />} />
       </Routes>
     </Router>
   );
